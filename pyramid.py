@@ -4,6 +4,21 @@ import sys
 calls = []
 
 
+class CallNode:
+    """
+    A struct to denote the node and edge of a call. It contains a caller and callee.
+    """
+
+    def __init__(self, rtl_line):
+        self.rtl = rtl_line
+        self.caller = ''
+        self.callee = ''
+
+    def __repr__(self):
+        strings = [f'{self.caller}', f'{self.callee}']
+        return '->'.join(str)
+
+
 def load_rtl_files(files):
     for f_path in files:
         with open(f_path) as f:
