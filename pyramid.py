@@ -1,22 +1,21 @@
 #!/usr/bin/env python
+import re
 import sys
 
 calls = []
 
 
-class CallNode:
-    """
-    A struct to denote the node and edge of a call. It contains a caller and callee.
+class CallNode(object):
+    """ A struct to denote the node and edge of a call. It contains a caller and callee.
     """
 
-    def __init__(self, rtl_line):
-        self.rtl = rtl_line
-        self.caller = ''
-        self.callee = ''
 
-    def __repr__(self):
-        strings = [f'{self.caller}', f'{self.callee}']
-        return '->'.join(str)
+def parse_rtl():
+    for rtl_line in calls:
+        caller = re.match(r'^;; Function (.*)\s+\((.*)?\)$', rtl_line)
+        if caller is None:
+            continue
+        print(caller.group(1))
 
 
 def load_rtl_files(files):
@@ -42,5 +41,4 @@ def main(argv=None):
 
 if __name__ == '__main__':
     main()
-    for line in calls:
-        print(line)
+    parse_rtl()
