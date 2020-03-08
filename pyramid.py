@@ -14,20 +14,28 @@ class Pyramid(object):
                 for line in f:
                     self.rtl.append(line.strip())
 
-    def parse_rtl(self):
+    def run(self):
+        self.calls.__parse__(self.rtl)
+        print(self.calls)
+
+
+class Calls(object):
+    """ A tree to denote the caller and callee pairs. """
+
+    def __parse__(self, rtl):
         caller_keeper = ''
-        for rtl_line in self.rtl:
+        for rtl_line in rtl:
             caller = re.match(r'^;; Function (.*)\s+\((.*)?\)$', rtl_line)
             if caller is not None:
                 caller_keeper = caller.group(1)
-                if not hasattr(self.calls, caller_keeper):
-                    setattr(self.calls, caller_keeper, CallerHolder())
+                if not hasattr(self, caller_keeper):
+                    setattr(self, caller_keeper, CallerHolder())
                 continue
 
             callee = re.match(r'^.*\(call.*"(.*)".*$', rtl_line)
             if callee is not None:
                 _callee = callee.group(1)
-                _caller = getattr(self.calls, caller_keeper)
+                _caller = getattr(self, caller_keeper)
                 setattr(_caller, _callee, 'call')
                 setattr(_caller, 'is_caller', True)
                 continue
@@ -35,15 +43,8 @@ class Pyramid(object):
             ref = re.match(r'^.*\(symbol_ref.*"(.*)".*$', rtl_line)
             if ref is not None:
                 _ref = ref.group(1)
-                setattr(getattr(self.calls, caller_keeper), _ref, 'ref')
+                setattr(getattr(self, caller_keeper), _ref, 'ref')
 
-    def run(self):
-        self.parse_rtl()
-        print(self.calls)
-
-
-class Calls(object):
-    """ A tree to denote the caller and callee pairs. """
     def __repr__(self):
         digraph = ['digraph callgraph {']
 
