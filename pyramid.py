@@ -7,7 +7,7 @@ import pydotplus as pdp
 class Pyramid(object):
     """The application class is responsible for input/output and contains a rtl parser"""
 
-    def __init__(self, rtl_files, svg_file='callgraph.svg'):
+    def __init__(self, rtl_files, svg_file):
         self.calls = Calls()
         self.rtl = []
         self.svg = svg_file
@@ -80,11 +80,15 @@ class CallerHolder(object):
 
 def main(argv=None):
     import getopt
+    output_file = 'callgraph.svg'
     if argv is None:
         argv = sys.argv
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'vo:')
-        Pyramid(args).run()
+        opts, args = getopt.gnu_getopt(sys.argv[1:], 'o:')
+        for opt_name, opt_value in opts:
+            if opt_name in ['-o']:
+                output_file = opt_value
+        Pyramid(args, output_file).run()
     except getopt.error as msg:
         sys.stdout = sys.stderr
         print(msg)
