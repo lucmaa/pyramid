@@ -1,22 +1,29 @@
 #!/usr/bin/env python
 import re
 import sys
+import pydotplus as pdp
 
 
 class Pyramid(object):
     """The application class is responsible for input/output and contains a rtl parser"""
 
-    def __init__(self, rtl_files):
+    def __init__(self, rtl_files, svg_file='callgraph.svg'):
         self.calls = Calls()
         self.rtl = []
+        self.svg = svg_file
+
         for f_path in rtl_files:
             with open(f_path) as f:
                 for line in f:
                     self.rtl.append(line.strip())
 
+    def save(self):
+        graph = pdp.graph_from_dot_data(self.calls.__repr__())
+        graph.write_svg(self.svg)
+
     def run(self):
         self.calls.__parse__(self.rtl)
-        print(self.calls)
+        self.save()
 
 
 class Calls(object):
