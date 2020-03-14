@@ -7,23 +7,27 @@ import pydotplus as pdp
 class Pyramid(object):
     """The application class is responsible for input/output and contains a rtl parser"""
 
-    def __init__(self, rtl_files, svg_file):
+    omit = []
+    in_rtl = []
+    out_svg = 'call_graph.svg'
+
+    def __init__(self):
         self.calls = Calls()
         self.rtl = []
-        self.svg = svg_file
 
-        for f_path in rtl_files:
+        for f_path in self.in_rtl:
             with open(f_path) as f:
                 for line in f:
                     self.rtl.append(line.strip())
 
     def save(self):
         graph = pdp.graph_from_dot_data(self.calls.__repr__())
-        graph.write_svg(self.svg)
+        graph.write_svg(self.out_svg)
 
     def run(self):
         self.calls.__parse__(self.rtl)
         self.save()
+        print(self.calls)
 
 
 class Calls(object):
@@ -59,8 +63,10 @@ class Calls(object):
             _caller_obj = getattr(self, _caller)
             if not getattr(_caller_obj, 'is_caller'):
                 continue
-            delattr(_caller_obj, 'is_caller')
             for _callee in _caller_obj.__dict__.keys():
+                # skip the attribute @is_caller
+                if _callee == 'is_caller':
+                    continue
                 # check if the callee is already defined in this scope
                 if getattr(_caller_obj, _callee) == 'ref' or not hasattr(self, _callee):
                     continue
@@ -72,7 +78,7 @@ class Calls(object):
 
 
 class CallerHolder(object):
-    """ A class holds a caller in case that the caller is a NoneType"""
+    """ A container of caller in case that the caller is a NoneType"""
 
     def __init__(self, is_caller=False):
         self.is_caller = is_caller
@@ -80,15 +86,18 @@ class CallerHolder(object):
 
 def main(argv=None):
     import getopt
-    output_file = 'callgraph.svg'
     if argv is None:
         argv = sys.argv
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], 'o:')
+        opts, args = getopt.gnu_getopt(sys.argv[1:], 'o:', 'output=omit=')
         for opt_name, opt_value in opts:
-            if opt_name in ['-o']:
-                output_file = opt_value
-        Pyramid(args, output_file).run()
+            if opt_name in ['o', 'output']:
+                Pyramid.out_svg = opt_value
+            if opt_name in ['omit']:
+                Pyramid.omit = opt_name.split(',')
+
+        Pyramid.in_rtl = args
+        Pyramid().run()
     except getopt.error as msg:
         sys.stdout = sys.stderr
         print(msg)
