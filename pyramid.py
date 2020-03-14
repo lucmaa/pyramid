@@ -48,7 +48,7 @@ class Calls(object):
                 _callee = callee.group(1)
                 _caller = getattr(self, caller_keeper)
                 setattr(_caller, _callee, 'call')
-                setattr(_caller, 'is_caller', True)
+                setattr(_caller, '__is_caller__', True)
                 continue
 
             ref = re.match(r'^.*\(symbol_ref.*"(.*)".*$', rtl_line)
@@ -61,11 +61,11 @@ class Calls(object):
 
         for _caller in self.__dict__.keys():
             _caller_obj = getattr(self, _caller)
-            if not getattr(_caller_obj, 'is_caller'):
+            if not getattr(_caller_obj, '__is_caller__'):
                 continue
             for _callee in _caller_obj.__dict__.keys():
-                # skip the attribute @is_caller
-                if _callee == 'is_caller':
+                # skip the attribute @__is_caller__
+                if _callee == '__is_caller__':
                     continue
                 # check if the callee is already defined in this scope
                 if getattr(_caller_obj, _callee) == 'ref' or not hasattr(self, _callee):
@@ -81,7 +81,7 @@ class CallerHolder(object):
     """ A container of caller in case that the caller is a NoneType"""
 
     def __init__(self, is_caller=False):
-        self.is_caller = is_caller
+        self.__is_caller__ = is_caller
 
 
 def main(argv=None):
