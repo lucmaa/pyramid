@@ -38,7 +38,12 @@ class Calls(object):
         for rtl_line in rtl:
             caller = re.match(r'^;; Function (.*)\s+\((.*)?\)$', rtl_line)
             if caller is not None:
-                caller_keeper = caller.group(1)
+                _caller_keeper = caller.group(1)
+                if _caller_keeper in Pyramid.omit:
+                    continue
+
+                caller_keeper = _caller_keeper
+
                 if not hasattr(self, caller_keeper):
                     setattr(self, caller_keeper, CallerHolder())
                 continue
@@ -46,6 +51,9 @@ class Calls(object):
             callee = re.match(r'^.*\(call.*"(.*)".*$', rtl_line)
             if callee is not None:
                 _callee = callee.group(1)
+                if _callee in Pyramid.omit:
+                    continue
+
                 _caller = getattr(self, caller_keeper)
                 setattr(_caller, _callee, 'call')
                 setattr(_caller, '__is_caller__', True)
@@ -54,6 +62,9 @@ class Calls(object):
             ref = re.match(r'^.*\(symbol_ref.*"(.*)".*$', rtl_line)
             if ref is not None:
                 _ref = ref.group(1)
+                if _ref in Pyramid.omit:
+                    continue
+
                 setattr(getattr(self, caller_keeper), _ref, 'ref')
 
     def __repr__(self):
@@ -89,12 +100,12 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], 'o:', 'output=omit=')
+        opts, args = getopt.gnu_getopt(sys.argv[1:], 'o:', ['output=', 'omit='])
         for opt_name, opt_value in opts:
-            if opt_name in ['o', 'output']:
+            if opt_name in ['-o', '--output']:
                 Pyramid.out_svg = opt_value
-            if opt_name in ['omit']:
-                Pyramid.omit = opt_name.split(',')
+            if opt_name in ['--omit']:
+                Pyramid.omit = re.sub(r'\s+', '', opt_value).split(',')
 
         Pyramid.in_rtl = args
         Pyramid().run()
